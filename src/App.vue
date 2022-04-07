@@ -1,17 +1,20 @@
 <template>
   <Header />
   <Home />
+  <Chat />
 </template>
 
 <script>
 import Home from "./components/Home.vue";
 import Header from "./components/Header.vue";
+import Chat from "./components/Chat.vue";
 
 export default {
   name: "App",
   components: {
     Home,
     Header,
+    Chat,
   },
 };
 </script>
