@@ -24,17 +24,18 @@
         <!-- Daily room URL is entered here -->
       </div>
     </div>
-
     <div class="call-container" :class="{ hidden: status === 'home' }">
       <!-- The Daily Prebuilt iframe is embedded in the div below using the ref -->
       <div id="call" ref="callRef"></div>
       <!-- Only show the control panel if a call is live -->
       <controls
+        hidden
         v-if="status === 'call'"
         :roomUrl="roomUrl"
         :callFrame="callFrame"
       />
     </div>
+    <Chat v-if="status === 'call'" />
   </main>
 </template>
 
@@ -42,19 +43,20 @@
 import DailyIframe from "@daily-co/daily-js";
 import Controls from "./Controls.vue";
 import api from "../api.js";
+import Chat from "./Chat.vue";
 
 const IFRAME_OPTIONS = {
   height: "auto",
   width: "100%",
   aspectRatio: 16 / 9,
   minWidth: "400px",
-  maxWidth: "920px",
+  maxWidth: "1600px",
   border: "1px solid var(--grey)",
   borderRadius: "4px",
 };
 
 export default {
-  components: { Controls },
+  components: { Controls, Chat },
   name: "Home",
   data() {
     return {
@@ -63,6 +65,7 @@ export default {
       callFrame: null,
       validRoomURL: false,
       roomError: false,
+      appState: this.appState,
     };
   },
   computed: {
@@ -92,7 +95,9 @@ export default {
       // Daily event callbacks
       const logEvent = (ev) => console.log(ev);
       const goToLobby = () => (this.status = "lobby");
-      const goToCall = () => (this.status = "call");
+      const goToCall = () => {
+        this.status = "call";
+      };
       const leaveCall = () => {
         if (this.callFrame) {
           this.status = "home";

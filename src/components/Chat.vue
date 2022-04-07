@@ -1,7 +1,9 @@
 
 <template>
-  <div id="talkjs-container" style="width: 40%; margin: 30px; height: 500px">
-    <i>Loading chat...</i>
+  <div style="width: 25%; margin: 30px; height: 100%">
+    <div id="talkjs-container" style="width: 100%; margin: 30px; height: 100%">
+      <i>Loading chat...</i>
+    </div>
   </div>
 </template>
 
@@ -17,6 +19,7 @@ export default {
   },
   mounted: function () {
     Talk.ready.then(function () {
+      // TODO: Fake Data, replace with data from objects
       var me = new Talk.User({
         id: "1111",
         name: "Char",
