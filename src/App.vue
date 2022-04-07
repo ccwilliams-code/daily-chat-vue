@@ -1,13 +1,41 @@
 <template>
   <Header />
   <Home />
+  
 </template>
 
 <script>
 import Home from "./components/Home.vue";
 import Header from "./components/Header.vue";
+import { CometChat } from "@cometchat-pro/chat";
+
+
+
 
 export default {
+   created(){
+   this.initializeComet()
+  },
+    methods: {
+      initializeComet(){
+        const APP_ID= '2068775636952963';
+            const REGION= 'us';
+            const appSetting = new CometChat.AppSettingsBuilder()
+              .subscribePresenceForAllUsers()
+              .setRegion(REGION)
+              .build();
+            CometChat.init(APP_ID, appSetting).then(
+              () => {
+                console.log('Initialization completed successfully');
+                // You can now call login function.
+              },
+              (error) => {
+                console.log('Initialization failed with error:', error);
+                // Check the reason for error and take appropriate action.
+              }
+        );
+      }
+    },
   name: "App",
   components: {
     Home,

@@ -19,7 +19,9 @@
             pattern="^(https:\/\/)?[\w.-]+(\.(daily\.(co)))+[\/\/]+[\w.-]+$"
             @input="validateInput"
           />
-          <input type="submit" value="Join room" :disabled="!validRoomURL" />
+          <!-- <input type="submit" value="Join room" :disabled="!validRoomURL" /> -->
+          <!-- TODO: Change this back -->
+          <input type="submit" value="Join room" />
         </form>
         <!-- Daily room URL is entered here -->
       </div>
@@ -58,7 +60,7 @@ export default {
   name: "Home",
   data() {
     return {
-      roomUrl: "",
+      roomUrl: "https://charlietest.daily.co/charlie-test-room",
       status: "home",
       callFrame: null,
       validRoomURL: false,

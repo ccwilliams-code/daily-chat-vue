@@ -10,11 +10,13 @@
       <button @click="copyUrl" class="teal">{{ copyButtonText }}</button>
     </div>
     <hr />
-    <h3>Example custom controls</h3>
+    <div hidden>
+      <h3>Example custom controls</h3>
     <p>
       You can also create your own meeting controls using daily-js methods
     </p>
-    <div>
+    </div>
+    <div hidden>
       <button @click="toggleCamera">Toggle camera</button>
       <button @click="toggleMic">Toggle mic</button>
       <button @click="toggleScreenShare">Toggle screen share</button>
