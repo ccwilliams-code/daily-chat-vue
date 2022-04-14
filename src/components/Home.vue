@@ -34,6 +34,20 @@
         :roomUrl="roomUrl"
         :callFrame="callFrame"
       />
+      <div
+        v-if="status === 'call'"
+        id="participants-list-div"
+        style="width: 100%; margin: 60px; height: 25%; background-color: silver"
+      >
+        Click to chat
+        <ul id="participant-list">
+          <li v-for="person in local_participants" :key="person.id">
+            <a href="#" @click="startChat(person.id, person.name)">
+              {{ person.name }}
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
     <Chat v-if="status === 'call'" />
   </main>
@@ -45,8 +59,9 @@ import Controls from "./Controls.vue";
 import api from "../api.js";
 import Chat from "./Chat.vue";
 import Talk from "talkjs";
-var local_participants = [];
-var chat_me;
+
+var me;
+var inbox;
 
 const IFRAME_OPTIONS = {
   height: "auto",
@@ -69,6 +84,7 @@ export default {
       validRoomURL: false,
       roomError: false,
       appState: this.appState,
+      local_participants: [],
     };
   },
 
@@ -78,6 +94,19 @@ export default {
     },
   },
   methods: {
+    startChat(chatID, chatName) {
+      var another = new Talk.User({
+        id: chatID,
+        name: chatName,
+        welcomeMessage: "joined the chat.",
+      });
+      var conversation = window.talkSession.getOrCreateConversation(
+        Talk.oneOnOneId(me, another)
+      );
+      conversation.setParticipant(me);
+      conversation.setParticipant(another);
+      inbox.select(conversation);
+    },
     createAndJoinRoom() {
       api
         .createRoom()
@@ -106,41 +135,28 @@ export default {
         console.log("A new user has joined the meeting");
         console.log(ev.participant.user_id);
         //A new user has joined the meeting,
-        //create a TalkJS user for them and add to the participants list in vuex
+        //create a TalkJS user for them and add to the participants list
         //this.$store.state.participants.append("hey");
-        var chatUserJoined = new Talk.User({
+        var new_participant = new Talk.User({
           id: ev.participant.user_id,
           name: ev.participant.user_name,
           email: "NONE",
           photoUrl: "NONE",
-          welcomeMessage: "Joined the chat.",
+          welcomeMessage: "Hello",
           role: "default",
         });
-        this.$store.state.participants.push(chatUserJoined);
-        local_participants.push(chatUserJoined);
-
-        //var participants = this.$store.state.participants;
-        console.log("XXXXX");
-        console.log(chat_me);
-        console.log(chatUserJoined);
-        console.log("XXXXX");
+        this.local_participants.push(new_participant);
+        console.log("TALK USER INFO::::");
+        console.log(ev.participant.user_id + ev.participant.user_name);
         Talk.ready.then(function () {
-          for (var each in local_participants) {
-            console.log("IN the loop" + each);
-            var other = new Talk.User(local_participants[each]);
-            var conversation = window.talkSession.getOrCreateConversation(
-              Talk.oneOnOneId(chat_me, other)
-            );
-
-            console.log("creating convo");
-            conversation.setParticipant(other);
-            console.log(other.name);
-            conversation.setParticipant(chat_me);
-            console.log(chat_me.name);
-          }
-
-          var inbox = window.talkSession.createInbox();
-          inbox.mount(document.getElementById("talkjs-container"));
+          var conversation = window.talkSession.getOrCreateConversation(
+            Talk.oneOnOneId(me, new_participant)
+          );
+          conversation.setParticipant(me);
+          conversation.setParticipant(new_participant);
+          inbox.select(conversation);
+          //var inbox = window.talkSession.createInbox();
+          //inbox.mount(document.getElementById("talkjs-container"));
         });
       };
       const leaveCall = () => {
@@ -171,48 +187,33 @@ export default {
         .on("left-meeting", leaveCall)
         .on("participant-joined", joinMeeting);
 
-      //join the daily call
       callFrame.join({ url, showFullscreenButton: true }).then((join_info) => {
         console.log(join_info);
         this.$store.state.local_user.username = join_info.local.user_name;
         this.$store.state.local_user.user_id = join_info.local.user_id;
-
-        //create a chat user to represent yourself
-        chat_me = new Talk.User({
+        me = new Talk.User({
           id: join_info.local.user_id,
           name: join_info.local.user_name,
-          email: "NONE",
-          photoUrl: "NONE",
-          welcomeMessage: "Joined the chat",
-          role: "default",
+          welcomeMessage: "Has joined the chat.",
         });
-
-        //create
+        var another = new Talk.User({
+          id: join_info.local.user_id + "222",
+          name: join_info.local.user_name + "222",
+          welcomeMessage: "joined the chat.",
+        });
         window.talkSession = new Talk.Session({
           appId: "tcLy3HjN",
-          me: chat_me,
+          me: me,
         });
-        Talk.ready.then(function () {
-          console.log("INITIAL MOUNTING$$$$$$$$$$$$$");
-          for (var each in local_participants) {
-            console.log("IN the loop" + each);
-            var other = new Talk.User(local_participants[each]);
-            var conversation = window.talkSession.getOrCreateConversation(
-              Talk.oneOnOneId(chat_me, other)
-            );
-            console.log("creating convo");
-            conversation.setParticipant(other);
-            console.log(other.name);
-            conversation.setParticipant(chat_me);
-            console.log(chat_me.name);
-          }
+        var conversation = window.talkSession.getOrCreateConversation(
+          Talk.oneOnOneId(me, another)
+        );
+        conversation.setParticipant(me);
+        conversation.setParticipant(another);
+        console.log(window.talkSession);
+        inbox = window.talkSession.createInbox();
 
-          var inbox = window.talkSession.createInbox();
-          inbox.mount(document.getElementById("talkjs-container"));
-          this.$store.state.participants.push(chat_me);
-          local_participants.push(chat_me);
-          this.$store.state.local_user.chat_me = chat_me;
-        });
+        inbox.mount(document.getElementById("talkjs-container"));
       });
     },
     submitJoinRoom(e) {
