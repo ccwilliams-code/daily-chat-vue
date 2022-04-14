@@ -49,21 +49,20 @@ Lean more about this demo with our [Vue+Daily Prebuilt tutorial](https://www.dai
 
 # Requirements/Features Matrix
 
-| Library Name
-Features | TalkJS | Weavy | CometChat | SendBird | Cryptalk | StreamChat | PureChat |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Hosting | Hosted | Hosted | Hosted | | Self-Hosted (Docker) | | |
-| Free Tier Available? | Y | Y | Y | 30-Day | Y | 30-Day | 30-Day |
-| Browser-based Solution | Y | Y | Y | Y | Y | Y | Y |
-| Direct Messaging | Y | Y | Y | | | | |
-| Login Required? | N | N | Y | | | | |
-| Speed/Ease of Implementation | | | | | | | |
-| Images | Y | Y | Y | | | | |
-| File Attachments | | Y | Y | | | | |
-| Polling | Unknown | | Extension | | | | |
-| Switching between conversations easily | N | ? | ? | ? | ? | ? | ? |
-| Notes | | https://www.weavy.com/ | | | https://github.com/Hexagon/cryptalk
-Focus on security | | https://purechat.com/ |
+| Features                               | TalkJS  | Weavy                  | CometChat | SendBird | Cryptalk                            | StreamChat | PureChat |
+| -------------------------------------- | ------- | ---------------------- | --------- | -------- | ----------------------------------- | ---------- | -------- |
+| Hosting                                | Hosted  | Hosted                 | Hosted    |          | Self-Hosted (Docker)                |            |          |
+| Free Tier Available?                   | Y       | Y                      | Y         | 30-Day   | Y                                   | 30-Day     | 30-Day   |
+| Browser-based Solution                 | Y       | Y                      | Y         | Y        | Y                                   | Y          | Y        |
+| Direct Messaging                       | Y       | Y                      | Y         |          |                                     |            |          |
+| Login Required?                        | N       | N                      | Y         |          |                                     |            |          |
+| Speed/Ease of Implementation           |         |                        |           |          |                                     |            |          |
+| Images                                 | Y       | Y                      | Y         |          |                                     |            |          |
+| File Attachments                       |         | Y                      | Y         |          |                                     |            |          |
+| Polling                                | Unknown |                        | Extension |          |                                     |            |          |
+| Switching between conversations easily | N       | ?                      | ?         | ?        | ?                                   | ?          | ?        |
+| Notes                                  |         | https://www.weavy.com/ |           |          | https://github.com/Hexagon/cryptalk |
+| Focus on security                      |         | https://purechat.com/  |
 
 # Work log
 
@@ -87,3 +86,9 @@ Focus on security | | https://purechat.com/ |
 - Created documentation, readme, etc
 - uploaded project to git
 - Emailed Jon to let him know that I’ve completed work on this project
+
+# Next Steps
+
+1. Create a better way to track and interact with participants.
+2. Extend the chat to include a full group chat instead of just 1-on-1.
+3. Extend the chat to possibly include the creation of polls.
