@@ -34,12 +34,17 @@
         :roomUrl="roomUrl"
         :callFrame="callFrame"
       />
+      <!-- TODO: If I weren't out of time, I would make this something more
+      professional, not a plain list 
+      Ideally, I'd tie this into the
+      participant list built into the Daily call, but I couldn't quite figure
+      that out. -->
       <div
         v-if="status === 'call'"
         id="participants-list-div"
         style="width: 100%; margin: 60px; height: 25%; background-color: silver"
       >
-        Click to chat
+        Participant List: Click to chat
         <ul id="participant-list">
           <li v-for="person in local_participants" :key="person.id">
             <a href="#" @click="startChat(person.id, person.name)">
@@ -49,7 +54,12 @@
         </ul>
       </div>
     </div>
-    <Chat v-if="status === 'call'" />
+
+    <div v-if="status === 'call'" style="width: 25%; margin: 5px; height: 100%">
+      <div id="talkjs-container" style="width: 100%; margin: 30px; height: 75%">
+        <i>Loading chat...</i>
+      </div>
+    </div>
   </main>
 </template>
 
@@ -57,7 +67,7 @@
 import DailyIframe from "@daily-co/daily-js";
 import Controls from "./Controls.vue";
 import api from "../api.js";
-import Chat from "./Chat.vue";
+
 import Talk from "talkjs";
 
 var me;
@@ -74,7 +84,7 @@ const IFRAME_OPTIONS = {
 };
 
 export default {
-  components: { Controls, Chat },
+  components: { Controls },
   name: "Home",
   data() {
     return {
@@ -94,6 +104,8 @@ export default {
     },
   },
   methods: {
+    //This function creates or finds a conversation between two people, based on their provided daily ID.
+    //This function is run whenever a user clicks on a person's name in the (bottom) participant list.
     startChat(chatID, chatName) {
       var another = new Talk.User({
         id: chatID,
@@ -105,6 +117,7 @@ export default {
       );
       conversation.setParticipant(me);
       conversation.setParticipant(another);
+      //This line sets the focus on the conversation with the selected person
       inbox.select(conversation);
     },
     createAndJoinRoom() {
@@ -131,12 +144,17 @@ export default {
       const goToCall = () => {
         this.status = "call";
       };
+      const leaveMeeting = (ev) => {
+        //clean up the local_participants list when a user leaves the call.
+        this.local_participants.splice(
+          this.local_participants.indexOf(ev.participant.user_id)
+        );
+      };
       const joinMeeting = (ev) => {
         console.log("A new user has joined the meeting");
         console.log(ev.participant.user_id);
         //A new user has joined the meeting,
         //create a TalkJS user for them and add to the participants list
-        //this.$store.state.participants.append("hey");
         var new_participant = new Talk.User({
           id: ev.participant.user_id,
           name: ev.participant.user_name,
@@ -145,18 +163,20 @@ export default {
           welcomeMessage: "Hello",
           role: "default",
         });
-        this.local_participants.push(new_participant);
-        console.log("TALK USER INFO::::");
-        console.log(ev.participant.user_id + ev.participant.user_name);
+        //Check if the participant is already in the list - if so, don't add them a second time
+        //This would probably only happen with certain refreshing shenanigans
+        if (this.local_participants.indexOf(new_participant) == -1)
+          this.local_participants.push(new_participant);
+
+        //create the talk session to host the conversations
         Talk.ready.then(function () {
+          //create or find a conversation between the local user and the user who joined (based on daily ID)
           var conversation = window.talkSession.getOrCreateConversation(
             Talk.oneOnOneId(me, new_participant)
           );
+
           conversation.setParticipant(me);
           conversation.setParticipant(new_participant);
-          inbox.select(conversation);
-          //var inbox = window.talkSession.createInbox();
-          //inbox.mount(document.getElementById("talkjs-container"));
         });
       };
       const leaveCall = () => {
@@ -185,7 +205,8 @@ export default {
         .on("joining-meeting", goToLobby)
         .on("joined-meeting", goToCall)
         .on("left-meeting", leaveCall)
-        .on("participant-joined", joinMeeting);
+        .on("participant-joined", joinMeeting)
+        .on("participant-left", leaveMeeting);
 
       callFrame.join({ url, showFullscreenButton: true }).then((join_info) => {
         console.log(join_info);
@@ -196,23 +217,13 @@ export default {
           name: join_info.local.user_name,
           welcomeMessage: "Has joined the chat.",
         });
-        var another = new Talk.User({
-          id: join_info.local.user_id + "222",
-          name: join_info.local.user_name + "222",
-          welcomeMessage: "joined the chat.",
-        });
         window.talkSession = new Talk.Session({
           appId: "tcLy3HjN",
           me: me,
         });
-        var conversation = window.talkSession.getOrCreateConversation(
-          Talk.oneOnOneId(me, another)
-        );
-        conversation.setParticipant(me);
-        conversation.setParticipant(another);
-        console.log(window.talkSession);
-        inbox = window.talkSession.createInbox();
 
+        //Create the inbox and mount it to its html container.
+        inbox = window.talkSession.createInbox();
         inbox.mount(document.getElementById("talkjs-container"));
       });
     },
