@@ -44,6 +44,9 @@ import DailyIframe from "@daily-co/daily-js";
 import Controls from "./Controls.vue";
 import api from "../api.js";
 import Chat from "./Chat.vue";
+import Talk from "talkjs";
+var local_participants = [];
+var chat_me;
 
 const IFRAME_OPTIONS = {
   height: "auto",
@@ -68,6 +71,7 @@ export default {
       appState: this.appState,
     };
   },
+
   computed: {
     runningLocally() {
       return window?.location?.origin.includes("localhost");
@@ -98,9 +102,52 @@ export default {
       const goToCall = () => {
         this.status = "call";
       };
+      const joinMeeting = (ev) => {
+        console.log("A new user has joined the meeting");
+        console.log(ev.participant.user_id);
+        //A new user has joined the meeting,
+        //create a TalkJS user for them and add to the participants list in vuex
+        //this.$store.state.participants.append("hey");
+        var chatUserJoined = new Talk.User({
+          id: ev.participant.user_id,
+          name: ev.participant.user_name,
+          email: "NONE",
+          photoUrl: "NONE",
+          welcomeMessage: "Joined the chat.",
+          role: "default",
+        });
+        this.$store.state.participants.push(chatUserJoined);
+        local_participants.push(chatUserJoined);
+
+        //var participants = this.$store.state.participants;
+        console.log("XXXXX");
+        console.log(chat_me);
+        console.log(chatUserJoined);
+        console.log("XXXXX");
+        Talk.ready.then(function () {
+          for (var each in local_participants) {
+            console.log("IN the loop" + each);
+            var other = new Talk.User(local_participants[each]);
+            var conversation = window.talkSession.getOrCreateConversation(
+              Talk.oneOnOneId(chat_me, other)
+            );
+
+            console.log("creating convo");
+            conversation.setParticipant(other);
+            console.log(other.name);
+            conversation.setParticipant(chat_me);
+            console.log(chat_me.name);
+          }
+
+          var inbox = window.talkSession.createInbox();
+          inbox.mount(document.getElementById("talkjs-container"));
+        });
+      };
       const leaveCall = () => {
         if (this.callFrame) {
           this.status = "home";
+          //handle user remove
+          //this.$store.state.participants.splice()
           this.callFrame.destroy();
         }
       };
@@ -121,9 +168,52 @@ export default {
         .on("camera-error", logEvent)
         .on("joining-meeting", goToLobby)
         .on("joined-meeting", goToCall)
-        .on("left-meeting", leaveCall);
+        .on("left-meeting", leaveCall)
+        .on("participant-joined", joinMeeting);
 
-      callFrame.join({ url, showFullscreenButton: true });
+      //join the daily call
+      callFrame.join({ url, showFullscreenButton: true }).then((join_info) => {
+        console.log(join_info);
+        this.$store.state.local_user.username = join_info.local.user_name;
+        this.$store.state.local_user.user_id = join_info.local.user_id;
+
+        //create a chat user to represent yourself
+        chat_me = new Talk.User({
+          id: join_info.local.user_id,
+          name: join_info.local.user_name,
+          email: "NONE",
+          photoUrl: "NONE",
+          welcomeMessage: "Joined the chat",
+          role: "default",
+        });
+
+        //create
+        window.talkSession = new Talk.Session({
+          appId: "tcLy3HjN",
+          me: chat_me,
+        });
+        Talk.ready.then(function () {
+          console.log("INITIAL MOUNTING$$$$$$$$$$$$$");
+          for (var each in local_participants) {
+            console.log("IN the loop" + each);
+            var other = new Talk.User(local_participants[each]);
+            var conversation = window.talkSession.getOrCreateConversation(
+              Talk.oneOnOneId(chat_me, other)
+            );
+            console.log("creating convo");
+            conversation.setParticipant(other);
+            console.log(other.name);
+            conversation.setParticipant(chat_me);
+            console.log(chat_me.name);
+          }
+
+          var inbox = window.talkSession.createInbox();
+          inbox.mount(document.getElementById("talkjs-container"));
+          this.$store.state.participants.push(chat_me);
+          local_participants.push(chat_me);
+          this.$store.state.local_user.chat_me = chat_me;
+        });
+      });
     },
     submitJoinRoom(e) {
       e.preventDefault();
@@ -138,7 +228,7 @@ export default {
 
 <style scoped>
 .wrapper {
-  background-color: var(--grey-lightest);
+  background-color: darkgrey;
   height: 100%;
   display: flex;
   align-items: center;
